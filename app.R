@@ -2,6 +2,7 @@ library(shiny)
 source("face_functions.R")
 #load('pls_res_individual.Rdat')
 load('pls_res_mean.Rdat')
+connections <- read.csv('adj_face_points.csv', header = FALSE)
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
   
@@ -60,9 +61,9 @@ ui <- fluidPage(
                   label = "time",
                   min = 1,
                   max = 100,
-                  value = 50)
+                  value = 50),
       
-      
+      actionButton("play", "Play!")
       
     ),
     
@@ -78,29 +79,32 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram ----
 server <- function(input, output) {
-  
-  # Histogram of the Old Faithful Geyser Data ----
-  # with requested number of bins
-  # This expression that generates a histogram is wrapped in a call
-  # to renderPlot to indicate that:
-  #
   # 1. It is "reactive" and therefore should be automatically
-  #    re-executed when inputs (input$bins) change
+  #    re-executed when inputs (input$x) change
   # 2. Its output type is a plot
   output$distPlot <- renderPlot({
-    
-    
-    new_vec=c(input$happy,input$sad, input$surprised,input$disgusted , input$angry,input$fearful,input$interested)
-    plot_middle_prediction(new_vec,pls_res,input$time)
-    # 
-    # x    <- faithful$waiting
-    # bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    # 
-    # hist(x, breaks = bins, col = "#75AADB", border = "white",
-    #      xlab = "Waiting time to next eruption (in mins)",
-    #      main = "Histogram of waiting times")
-    
-  },height = 800, width = 600 )
+    new_vec = c(
+      input$happy,
+      input$sad,
+      input$surprised,
+      input$disgusted,
+      input$angry,
+      input$fearful,
+      input$interested
+    )
+    plot_middle_prediction(
+      new_vec,
+      pls_res,
+      input$time,
+      connections
+    )
+
+
+  }, height=800, width=600
+  )
+
+  
+  
   
 }
 shinyApp(ui = ui, server = server)
