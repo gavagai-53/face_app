@@ -1,9 +1,12 @@
 library(shiny)
 source("face_functions.R")
 #load('pls_res_individual.Rdat')
-load('pls_res_mean.Rdat')
+#load('pls_res_mean_sex.Rdat')
+
+load('pls_res_indi_sex_age.Rdat')
+
 connections <- read.csv('adj_face_points.csv', header = FALSE)
-# Define UI for app that draws a histogram ----
+# Define UI for app
 ui <- fluidPage(
   
   # App title ----
@@ -57,11 +60,21 @@ ui <- fluidPage(
                   min = 0,
                   max = 100,
                   value = 0),
+      sliderInput(inputId = "age",
+                  label = "age",
+                  min = 16,
+                  max = 60,
+                  value = 25),
+
       sliderInput(inputId = "time",
                   label = "time",
                   min = 1,
                   max = 100,
                   value = 50),
+      
+      radioButtons("sex", "sex",
+                   c("male" = 0,
+                     "female" = 1)),
       
       actionButton("play", "Play!")
       
@@ -82,6 +95,7 @@ server <- function(input, output) {
   # 1. It is "reactive" and therefore should be automatically
   #    re-executed when inputs (input$x) change
   # 2. Its output type is a plot
+  
   output$distPlot <- renderPlot({
     new_vec = c(
       input$happy,
@@ -90,13 +104,14 @@ server <- function(input, output) {
       input$disgusted,
       input$angry,
       input$fearful,
-      input$interested
+      input$interested,
+      as.integer(input$sex),
+      input$age
     )
     plot_middle_prediction(
-      new_vec,
+      new_vec[1:(dim(pls_res$scores)[2])],
       pls_res,
-      input$time,
-      connections
+      input$time
     )
 
 
