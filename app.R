@@ -6,6 +6,11 @@ source("face_functions.R")
 load('pls_res_indi_sex_age.Rdat')
 
 connections <- read.csv('adj_face_points.csv', header = FALSE)
+
+# define time range globally 
+time_range <- c(1,100)
+time_start_val <- 0
+
 # Define UI for app
 ui <- fluidPage(
   
@@ -68,9 +73,9 @@ ui <- fluidPage(
 
       sliderInput(inputId = "time",
                   label = "time",
-                  min = 1,
-                  max = 100,
-                  value = 50),
+                  min = time_range[1],
+                  max = time_range[2],
+                  value = time_start_val),
       
       radioButtons("sex", "sex",
                    c("male" = 0,
@@ -91,12 +96,42 @@ ui <- fluidPage(
 )
 
 # Define server logic required to draw a histogram ----
-server <- function(input, output) {
-  # 1. It is "reactive" and therefore should be automatically
-  #    re-executed when inputs (input$x) change
-  # 2. Its output type is a plot
+server <- function(input, output, session) {
+
+  state <- reactiveValues()
+  state$running <- FALSE
+  
+  observeEvent(input$play, {
+    state$running <- TRUE
+  })
   
   output$distPlot <- renderPlot({
+    
+    if ((input$time < time_range[2]) && state$running){
+      # raise time state
+      updateSliderInput(
+        session,
+        inputId = "time",
+        label = "time",
+        value = {
+          # fix this to change moivng "speed" 
+          input$time + 5
+        }
+      )
+      
+      # this causes the plot to re-render every 10 ms
+      invalidateLater(10)
+    } else if (state$running){
+      state$running <- FALSE
+      updateSliderInput(
+        session,
+        inputId = "time",
+        label = "time",
+        value = 0
+      )
+    }
+    
+    
     new_vec = c(
       input$happy,
       input$sad,
