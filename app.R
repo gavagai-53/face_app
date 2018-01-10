@@ -120,7 +120,7 @@ server <- function(input, output, session) {
     chosenfile=file.choose()
     object_name=load(chosenfile)
     pls_res2<<-get(object_name)
-    rm(pls_res)
+    rm(object_name)
   })
   
   output$distPlot <- renderPlot({

@@ -101,6 +101,8 @@ plot_same_window=function(new_dat_vector,pls_obj1,pls_obj2,frame){
     y[connections[,2]]
     ,col="red")
   
+  legend("bottomright", legend=c("Model 1", "Model 2"),
+         col=c("black", "red"), lty=1, cex=0.8)
 }
 
 
