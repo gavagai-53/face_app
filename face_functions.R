@@ -2,7 +2,7 @@ library(pls)
 library(MASS)
 
 #label data
-labels=read.csv("dimension_ratings.csv",header = T,sep = ";",stringsAsFactors = F,encoding = "UTF-16")
+labels=read.csv("dimension_ratings.csv",header = T,sep = ";",stringsAsFactors = F,fileEncoding = "ISO-8859-1")
 rating_labels = labels[,c(2,seq(8,20,2))]
 rating_labels[,2:8]=sapply(rating_labels[,2:8],as.numeric)
 
