@@ -69,18 +69,23 @@ ui <- fluidPage(
                   max = time_range[2],
                   value = time_start_val),
       
-
+      fileInput(
+        "modelfile", "select model for display",
+        accept = c(".Rdata", ".rda", ".Rdat")
+      ),
       
       actionButton("play", "Play!"),
       actionButton("loadmodel1","Model1"),
       actionButton("loadmodel2","Model2")
-      
-      
     ),
     
     # Main panel for displaying outputs ----
     mainPanel(
-      fluidRow(textOutput(outputId="labels"),plotOutput(outputId = "distPlot")
+      fluidRow(
+        #textOutput(outputId="labels"),
+        plotOutput(
+          outputId = "distPlot"
+        )
       )
   
 
@@ -90,57 +95,45 @@ ui <- fluidPage(
 
 # Define server logic required to draw the plots
 server <- function(input, output, session) {
-
-  #load two default models here
-  #model1
-  object_name=load("models/pls_res_NTASDvids.Rdat")
-  pls_res1=get(object_name)
-  rm(object_name)
-  #model2
-  object_name=load("models/pls_res_asd.Rdat")
-  pls_res2=get(object_name)
-  rm(object_name)
-
   
-  state <- reactiveValues()
-  state$running <- FALSE
+  # set maximum upload size to 10MB
+  options(shiny.maxRequestSize=10*1024^2) 
+  
+  # init reactive context
+  context <- reactiveValues()
+  context$running <- FALSE
+  
+  active_models <- reactiveValues()
+  active_models$default <- get(load("models/pls_res_NTASDvids.Rdat"))
   
   observeEvent(input$play, {
-    state$running <- TRUE
+    context$running <- TRUE
   })
   
-  observeEvent(input$loadmodel1, {
-    chosenfile=file.choose()
-    object_name=load(chosenfile)
-    pls_res1<<-get(object_name)
-    rm(object_name)
-  })
-  
-  observeEvent(input$loadmodel2, {
-    chosenfile=file.choose()
-    object_name=load(chosenfile)
-    pls_res2<<-get(object_name)
-    rm(object_name)
+  observeEvent(input$modelfile, {
+    # event gets triggered when files are uploaded
+    active_models[[input$modelfile$name]] <<- get(
+      load(input$modelfile$datapath)
+    )
   })
   
   output$distPlot <- renderPlot({
-
-    if ((input$time < time_range[2]) && state$running){
+    if ((input$time < time_range[2]) && context$running){
       # raise time state
       updateSliderInput(
         session,
         inputId = "time",
         label = "time",
         value = {
-          # fix this to change moivng "speed" 
+          # fix this to change moving "speed" 
           input$time + 5
         }
       )
       
       # this causes the plot to re-render every 10 ms
       invalidateLater(10)
-    } else if (state$running){
-      state$running <- FALSE
+    } else if (context$running){
+      context$running <- FALSE
       updateSliderInput(
         session,
         inputId = "time",
@@ -148,7 +141,6 @@ server <- function(input, output, session) {
         value = 0
       )
     }
-    
     
     new_vec = c(
       input$happy,
@@ -160,14 +152,11 @@ server <- function(input, output, session) {
       input$interested
     )
 
-    plot_same_window(new_vec,pls_res1,pls_res2,input$time)
-    output$labels=renderText(paste(find_labels(new_vec,70)," ",collapse=''))
+    plot_same_window(new_vec, active_models, input$time)
+    
+    #output$labels = renderText(paste(find_labels(new_vec,70)," ",collapse=''))
     
   }, height=1000, width=1000
   )
-
-  
-  
-  
 }
 shinyApp(ui = ui, server = server)
