@@ -67,7 +67,7 @@ find_differences = function(new_dat_vector,pls_obj1,pls_obj2){
 }
 
 
-plot_same_window=function(new_dat_vector, pls_objects, frame){
+plot_same_window=function(new_dat_vector, pls_objects, active_models, frame){
   # plot all pls objects in list pls_objects
   # supposed, length(pls_ojects) is always >= 1
 
@@ -84,14 +84,13 @@ plot_same_window=function(new_dat_vector, pls_objects, frame){
     "sex",
     "age")[1:vec_len]
   
-  keys <- names(pls_objects)
-  n_models <- length(keys)
+  n_models <- length(active_models)
   
   # init a color palette
   colors_ = rainbow(n_models)
 
-  for (i in 1:length(keys)){
-    prediction <- predict(pls_objects[[keys[i]]], newdata=new_dat_vector, ncomp=vec_len) 
+  for (i in 1:length(active_models)){
+    prediction <- predict(pls_objects[[active_models[i]]], newdata=new_dat_vector, ncomp=vec_len) 
     frame_vec = prediction[(1+136*(frame-1)):(136*frame)]
     
     x <- frame_vec[seq(1,length(frame_vec),2)]
@@ -115,7 +114,7 @@ plot_same_window=function(new_dat_vector, pls_objects, frame){
       ,col=colors_[i])
   }
   
-  legend("bottomright", legend=keys,
+  legend("bottomright", legend=active_models,
          col=colors_, lty=1, cex=0.8)
 }
 

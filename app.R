@@ -70,13 +70,19 @@ ui <- fluidPage(
                   value = time_start_val),
       
       fileInput(
-        "modelfile", "select model for display",
+        "modelfile", "Upload model",
         accept = c(".Rdata", ".rda", ".Rdat")
       ),
+      tags$div(
+        id="divActiveModels", checked=NA, 
+        checkboxGroupInput(
+          "activeModels", "Select models for display",
+          choices = c("default"),
+          selected = c("default")
+        )
+      ),
+      actionButton("play", "Play!")
       
-      actionButton("play", "Play!"),
-      actionButton("loadmodel1","Model1"),
-      actionButton("loadmodel2","Model2")
     ),
     
     # Main panel for displaying outputs ----
@@ -102,18 +108,41 @@ server <- function(input, output, session) {
   # init reactive context
   context <- reactiveValues()
   context$running <- FALSE
-  
-  active_models <- reactiveValues()
-  active_models$default <- get(load("models/pls_res_NTASDvids.Rdat"))
+
+  models <- reactiveValues()
+  models$default <- get(load("models/pls_res_NTASDvids.Rdat"))
   
   observeEvent(input$play, {
     context$running <- TRUE
   })
   
+  # create non-reactive buffer
+  active <- c()
+  
+  observeEvent(input$activeModels, {
+    active <<- names(models)[names(models) %in% input$activeModels]
+  })
+  
   observeEvent(input$modelfile, {
     # event gets triggered when files are uploaded
-    active_models[[input$modelfile$name]] <<- get(
+    # load model
+    name <- input$modelfile$name
+    
+    models[[name]] <<- get(
       load(input$modelfile$datapath)
+    )
+    
+    removeUI("#activeModels")
+    
+    # and add model to checkbox
+    insertUI(
+      "#divActiveModels",
+      where = "afterEnd",
+      ui = checkboxGroupInput(
+        "activeModels", "Select models for display",
+        choices = names(models),
+        selected = c(active, name)
+      )
     )
   })
   
@@ -151,8 +180,11 @@ server <- function(input, output, session) {
       input$fearful,
       input$interested
     )
-
-    plot_same_window(new_vec, active_models, input$time)
+    
+    active <- input$activeModels
+    if (!is.null(active)){
+      plot_same_window(new_vec, models, active, input$time)
+    }
     
     #output$labels = renderText(paste(find_labels(new_vec,70)," ",collapse=''))
     
