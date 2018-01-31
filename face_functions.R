@@ -2,7 +2,13 @@ library(pls)
 library(MASS)
 
 #label data
-labels=read.csv("dimension_ratings.csv",header = T,sep = ";",stringsAsFactors = F,fileEncoding = "ISO-8859-1")
+labels = read.csv(
+  "dimension_ratings.csv",
+  header = T,
+  sep = ";",
+  stringsAsFactors = F,
+  fileEncoding = "ISO-8859-1"
+  )
 rating_labels = labels[,c(2,seq(8,20,2))]
 rating_labels[,2:8]=sapply(rating_labels[,2:8],as.numeric)
 
@@ -61,48 +67,55 @@ find_differences = function(new_dat_vector,pls_obj1,pls_obj2){
 }
 
 
-plot_same_window=function(new_dat_vector,pls_obj1,pls_obj2,frame){
-  vec_len=length(new_dat_vector)
-  new_dat_vector=matrix(new_dat_vector,byrow=T,ncol=vec_len)
-  be_colnames=c("happy", "sad", "surprised", "disgusted", "angry", "fearful", "interested","sex","age")[1:length(new_dat_vector)]
-  colnames(new_dat_vector)=be_colnames
-  prediction1=predict(pls_obj1,newdata=new_dat_vector,ncomp=vec_len)
-  prediction2=predict(pls_obj2,newdata=new_dat_vector,ncomp=vec_len) 
+plot_same_window=function(new_dat_vector, pls_objects, active_models, frame){
+  # plot all pls objects in list pls_objects
+  # supposed, length(pls_ojects) is always >= 1
+
+  vec_len = length(new_dat_vector)
+  new_dat_vector = matrix(new_dat_vector, byrow=T, ncol=vec_len)
+  colnames(new_dat_vector) = c(
+    "happy",
+    "sad",
+    "surprised",
+    "disgusted",
+    "angry",
+    "fearful",
+    "interested",
+    "sex",
+    "age")[1:vec_len]
   
-  frame_vec = prediction1[(1+136*(frame-1)):(136*frame)]
+  n_models <- length(active_models)
   
-  x <- frame_vec[seq(1,length(frame_vec),2)]
-  y <- frame_vec[seq(2,length(frame_vec),2)]*-1
+  # init a color palette
+  colors_ = rainbow(n_models)
+
+  for (i in 1:length(active_models)){
+    prediction <- predict(pls_objects[[active_models[i]]], newdata=new_dat_vector, ncomp=vec_len) 
+    frame_vec = prediction[(1+136*(frame-1)):(136*frame)]
+    
+    x <- frame_vec[seq(1,length(frame_vec),2)]
+    y <- frame_vec[seq(2,length(frame_vec),2)]*-1
+    if (i == 1){
+      plot(
+        x,
+        y,
+        ylim=c(-0.2,0.13),xlim=c(-0.2,0.2),
+        xlab="X", ylab="Y"
+      )
+    }
+    
+    points(x, y, col = "red")
+    
+    segments(
+      x[connections[,1]],
+      y[connections[,1]],
+      x[connections[,2]],
+      y[connections[,2]]
+      ,col=colors_[i])
+  }
   
-  plot(
-    x,
-    y,
-    ylim=c(-0.2,0.13),xlim=c(-0.2,0.2),
-    xlab="X", ylab="Y"
-  )
-  
-  segments(
-    x[connections[,1]],
-    y[connections[,1]],
-    x[connections[,2]],
-    y[connections[,2]]
-  )
-  
-  frame_vec = prediction2[(1+136*(frame-1)):(136*frame)]
-  
-  x <- frame_vec[seq(1,length(frame_vec),2)]
-  y <- frame_vec[seq(2,length(frame_vec),2)]*-1
-  points(x,y,col="red")
-  
-  segments(
-    x[connections[,1]],
-    y[connections[,1]],
-    x[connections[,2]],
-    y[connections[,2]]
-    ,col="red")
-  
-  legend("bottomright", legend=c("Model 1", "Model 2"),
-         col=c("black", "red"), lty=1, cex=0.8)
+  legend("bottomright", legend=active_models,
+         col=colors_, lty=1, cex=0.8)
 }
 
 
