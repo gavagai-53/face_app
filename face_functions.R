@@ -128,3 +128,11 @@ find_labels=function(rating_vec, threshold=25){
   matching_labels = rating_labels[label_indices,1][order(distances[distances<threshold])]
 }
 
+calc_latent = function(input,pls_obj){
+  # calculates scores on latent variables for input
+  
+  #get loading matrix
+  loading_mat=loadings(pls_obj)
+  return(input %*% loading_mat)
+  
+}

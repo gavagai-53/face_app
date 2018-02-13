@@ -89,11 +89,11 @@ ui <- fluidPage(
     mainPanel(
       fluidRow(
         #textOutput(outputId="labels"),
-        plotOutput(
-          outputId = "distPlot"
-        )
+        #splitLayout(cellWidths = c("50%", "50%"), plotOutput("facePlot"), plotOutput("latent_variable_bp"))
+        column(8,plotOutput("facePlot")),
+        column(4,plotOutput("latent_variable_bp1"),plotOutput("latent_variable_bp2"))
       )
-  
+      
 
     )
   )
@@ -146,7 +146,7 @@ server <- function(input, output, session) {
     )
   })
   
-  output$distPlot <- renderPlot({
+  output$facePlot <- renderPlot({
     if ((input$time < time_range[2]) && context$running){
       # raise time state
       updateSliderInput(
@@ -186,9 +186,36 @@ server <- function(input, output, session) {
       plot_same_window(new_vec, models, active, input$time)
     }
     
+    
+    
     #output$labels = renderText(paste(find_labels(new_vec,70)," ",collapse=''))
     
-  }, height=1000, width=1000
+  }, height=800, width=800
   )
+  output$latent_variable_bp1 <- renderPlot({
+    new_vec = c(
+      input$happy,
+      input$sad,
+      input$surprised,
+      input$disgusted,
+      input$angry,
+      input$fearful,
+      input$interested
+    )
+    barplot(calc_latent(new_vec,models$default),main = "Latent variable scores")
+  })
+  output$latent_variable_bp2 <- renderPlot({
+    new_vec = c(
+      input$happy,
+      input$sad,
+      input$surprised,
+      input$disgusted,
+      input$angry,
+      input$fearful,
+      input$interested
+    )
+    barplot(calc_latent(new_vec,models$default),main = "Latent variable scores")
+  })
+  
 }
 shinyApp(ui = ui, server = server)
