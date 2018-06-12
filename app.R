@@ -81,7 +81,10 @@ ui <- fluidPage(
           selected = c("default")
         )
       ),
-      actionButton("play", "Play!")
+      actionButton("play", "Play!"),
+      
+      # Reset button in UI 
+      actionButton("reset", "Reset")
       
     ),
     
@@ -190,5 +193,16 @@ server <- function(input, output, session) {
     
   }, height=1000, width=1000
   )
+  
+  # Reset button listener to reset all values to 0.
+  observeEvent(input$reset, {
+    updateSliderInput(session, "happy", value = 0)
+    updateSliderInput(session, "sad", value = 0)
+    updateSliderInput(session, "surprised", value = 0)
+    updateSliderInput(session, "disgusted", value = 0)
+    updateSliderInput(session, "angry", value = 0)
+    updateSliderInput(session, "fearful", value = 0)
+    updateSliderInput(session, "interested", value = 0)
+  })
 }
 shinyApp(ui = ui, server = server)
